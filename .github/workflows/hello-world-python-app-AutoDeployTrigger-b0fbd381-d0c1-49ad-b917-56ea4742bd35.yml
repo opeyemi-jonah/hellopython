@@ -1,0 +1,42 @@
+name: Trigger auto deployment for hello-world-python-app
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ master ]
+    paths:
+    - '**'
+    - '.github/workflows/hello-world-python-app-AutoDeployTrigger-b0fbd381-d0c1-49ad-b917-56ea4742bd35.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.HELLOWORLDPYTHONAPP_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }} 
+          registryUrl: mypythonapp.azurecr.io
+          registryUsername: ${{ secrets.HELLOWORLDPYTHONAPP_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.HELLOWORLDPYTHONAPP_REGISTRY_PASSWORD }}
+          containerAppName: hello-world-python-app
+          resourceGroup: TestEnv
+          imageToBuild: mypythonapp.azurecr.io/hello-world-python-app:${{ github.sha }}
+          dockerfilePath: Dockerfile
+
+     
+
